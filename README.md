@@ -22,6 +22,7 @@ El profesorado facilita **10 muestras experimentales** para validar las operacio
 
 - [Tablero de tareas (GitHub Project)](https://github.com/users/Josecp03/projects/2)
 - [Guía de tareas y roles](./TASKS.md)
+- [Canal público ThingSpeak Iot](https://thingspeak.mathworks.com/channels/3566091)
 
 ## Tecnologías propuestas
 
