@@ -1,0 +1,9 @@
+# Dependencias principales del proyecto
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Pruebas automatizadas
+pytest>=7.4.0
+
+# Visualización (mejora opcional)
+matplotlib>=3.7.0
