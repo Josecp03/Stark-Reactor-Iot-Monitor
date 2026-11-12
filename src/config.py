@@ -51,6 +51,22 @@ def load_dotenv_file(env_path: Path | str | None = None) -> None:
             os.environ[key] = value
 
 
+ENV_EXAMPLE_FILENAME = ".env.example"
+
+# Variables obligatorias para que la aplicación pueda leer y escribir en el canal
+REQUIRED_ENV_VARS: tuple[str, ...] = ("THINGSPEAK_CHANNEL_ID", "THINGSPEAK_WRITE_API_KEY")
+
+
+@dataclass(frozen=True)
+class ConfigProblem:
+    """Problema de configuración que se muestra al usuario sin revelar secretos."""
+
+    variable: str
+    message: str
+    blocks_write: bool = False
+    blocks_read: bool = False
+
+
 @dataclass(frozen=True)
 class ThingSpeakConfig:
     """Parámetros de conexión con ThingSpeak."""
@@ -60,6 +76,51 @@ class ThingSpeakConfig:
     write_api_key: str | None = None
     base_url: str = DEFAULT_BASE_URL
     timeout: float = DEFAULT_HTTP_TIMEOUT
+
+    def problems(self) -> list[ConfigProblem]:
+        """Comprueba las variables obligatorias y devuelve los problemas encontrados.
+
+        Los mensajes nunca incluyen el valor de las claves.
+        """
+        found: list[ConfigProblem] = []
+
+        if not self.channel_id.isdigit():
+            found.append(
+                ConfigProblem(
+                    variable="THINGSPEAK_CHANNEL_ID",
+                    message=(
+                        "THINGSPEAK_CHANNEL_ID debe ser el identificador numérico del canal "
+                        f"(por ejemplo {DEFAULT_CHANNEL_ID}). Revise el archivo .env."
+                    ),
+                    blocks_write=True,
+                    blocks_read=True,
+                )
+            )
+
+        if self.write_api_key is None:
+            found.append(
+                ConfigProblem(
+                    variable="THINGSPEAK_WRITE_API_KEY",
+                    message=(
+                        "Falta THINGSPEAK_WRITE_API_KEY: no se podrán enviar muestras. "
+                        f"Copie {ENV_EXAMPLE_FILENAME} a .env y escriba la Write API Key "
+                        "de la pestaña 'API Keys' del canal."
+                    ),
+                    blocks_write=True,
+                )
+            )
+
+        return found
+
+    @property
+    def can_write(self) -> bool:
+        """Indica si la configuración permite enviar muestras al canal."""
+        return not any(p.blocks_write for p in self.problems())
+
+    @property
+    def can_read(self) -> bool:
+        """Indica si la configuración permite consultar el canal."""
+        return not any(p.blocks_read for p in self.problems())
 
     @classmethod
     def from_env(cls, env_path: Path | str | None = None) -> ThingSpeakConfig:

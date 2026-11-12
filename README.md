@@ -64,7 +64,7 @@ stark-reactor-iot-monitor/
 
 ## Instalación y ejecución
 
-> Estos comandos describen el flujo de instalación **previsto**. Serán verificables una vez se incorporen los archivos indicados en la estructura del proyecto.
+Requisitos: **Python 3.11 o superior** con Tkinter (incluido en el instalador oficial de Python para Windows y macOS; en Debian/Ubuntu: `sudo apt install python3-tk`).
 
 1. Clonar el repositorio y entrar en su directorio.
 2. Crear y activar un entorno virtual:
@@ -83,20 +83,44 @@ stark-reactor-iot-monitor/
    pip install -r requirements.txt
    ```
 
-4. Copiar `.env.example` a `.env` y configurar los valores definidos por el equipo, por ejemplo:
+4. Copiar `.env.example` a `.env` y escribir la Write API Key del canal (pestaña *API Keys* de ThingSpeak):
 
    ```dotenv
-   THINGSPEAK_CHANNEL_ID=REEMPLAZAR
+   THINGSPEAK_CHANNEL_ID=3566091
    THINGSPEAK_WRITE_API_KEY=REEMPLAZAR
    THINGSPEAK_READ_API_KEY=
    ```
 
-   En un canal público, la lectura habitual de los feeds puede realizarse sin clave. Nunca subir `.env` ni claves reales al repositorio.
+   | Variable | Obligatoria | Uso |
+   | --- | --- | --- |
+   | `THINGSPEAK_CHANNEL_ID` | Sí | Identificador numérico del canal. Si no se define, se usa `3566091`. |
+   | `THINGSPEAK_WRITE_API_KEY` | Sí, para enviar muestras | Clave de escritura del canal. |
+   | `THINGSPEAK_READ_API_KEY` | No | Solo necesaria si el canal deja de ser público. |
+   | `THINGSPEAK_BASE_URL` | No | URL de la API (por defecto `https://api.thingspeak.com`). |
+   | `THINGSPEAK_HTTP_TIMEOUT` | No | Tiempo máximo de espera por petición, en segundos (por defecto `10`). |
 
-5. Iniciar la aplicación:
+   Las variables también pueden definirse directamente en el entorno del sistema; tienen prioridad sobre `.env`. El archivo `.env` está excluido de Git mediante `.gitignore`: nunca subir claves reales al repositorio.
+
+5. Comprobar la configuración (opcional):
+
+   ```bash
+   python -m src.main --check-config
+   ```
+
+   Muestra el canal y si las claves están configuradas, sin revelar su valor. Termina con código `1` si falta alguna variable obligatoria.
+
+6. Iniciar la aplicación desde la raíz del proyecto:
 
    ```bash
    python -m src.main
+   ```
+
+   Si falta la Write API Key, la aplicación se abre en **modo solo lectura** y muestra un aviso con los pasos para configurarla.
+
+7. Ejecutar las pruebas:
+
+   ```bash
+   python -m pytest -v
    ```
 
 ## Funcionalidades previstas
