@@ -46,6 +46,7 @@ stark-reactor-iot-monitor/
 │   │   └── write_service.py
 │   ├── ui/
 │   │   ├── app.py
+│   │   ├── history_view.py
 │   │   └── write_form.py
 │   └── charts/
 │       └── reactor_charts.py

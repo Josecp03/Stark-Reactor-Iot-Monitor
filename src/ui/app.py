@@ -1,10 +1,10 @@
-"""Ventana principal de Stark Reactor IoT Monitor (P4-01, P4-02).
+"""Ventana principal de Stark Reactor IoT Monitor (P4-01, P4-02, P4-03).
 
 Estructura de la interfaz:
 - Cabecera con el canal configurado.
 - Aviso de configuración cuando faltan variables obligatorias.
 - Pestaña "Enviar muestra" (formulario manual, `src/ui/write_form.py`).
-- Pestaña "Histórico" (tabla de registros, issue #16).
+- Pestaña "Histórico" (tabla de registros, `src/ui/history_view.py`).
 - Barra de estado.
 """
 
@@ -16,6 +16,8 @@ from collections.abc import Sequence
 from tkinter import messagebox, ttk
 
 from src.config import ConfigProblem, ThingSpeakConfig
+from src.services.read_service import ReadResult, get_latest_readings
+from src.ui.history_view import HistoryView
 from src.ui.write_form import ManualEntryForm, SampleWriter
 
 APP_TITLE = "Stark Reactor IoT Monitor"
@@ -95,8 +97,19 @@ class ReactorMonitorApp(tk.Tk):
         )
         self.write_form.pack(fill=tk.BOTH, expand=True)
 
-        # Contenido provisional hasta implementar #16.
-        ttk.Label(self.history_tab, text="Tabla de histórico (pendiente, issue #16).").pack(anchor=tk.W)
+        self.history_view = HistoryView(
+            self.history_tab,
+            fetch=self._fetch_readings,
+            disabled_reason=None if self.config_data.can_read else (
+                "Consulta desactivada: THINGSPEAK_CHANNEL_ID no es válido. Revise el archivo .env."
+            ),
+            on_status=self.set_status,
+        )
+        self.history_view.pack(fill=tk.BOTH, expand=True)
+
+    def _fetch_readings(self, results: int) -> ReadResult:
+        """Consulta los últimos registros con la configuración activa (se ejecuta en segundo plano)."""
+        return get_latest_readings(results=results, config=self.config_data)
 
     def _create_writer(self) -> tuple[SampleWriter | None, str | None]:
         """Crea el servicio de escritura con la configuración activa, si es posible."""
@@ -149,5 +162,6 @@ def run_app(config: ThingSpeakConfig, problems: Sequence[ConfigProblem] = ()) ->
         print(f"[ERROR] No se pudo abrir la interfaz gráfica: {exc}", file=sys.stderr)
         return 1
     app.after(200, app.show_config_errors)
+    app.after(300, app.history_view.refresh)
     app.mainloop()
     return 0
