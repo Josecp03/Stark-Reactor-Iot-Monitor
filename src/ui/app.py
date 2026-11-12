@@ -1,9 +1,9 @@
-"""Ventana principal de Stark Reactor IoT Monitor (P4-01).
+"""Ventana principal de Stark Reactor IoT Monitor (P4-01, P4-02).
 
-Estructura base de la interfaz:
+Estructura de la interfaz:
 - Cabecera con el canal configurado.
 - Aviso de configuración cuando faltan variables obligatorias.
-- Pestaña "Enviar muestra" (formulario manual, issue #15).
+- Pestaña "Enviar muestra" (formulario manual, `src/ui/write_form.py`).
 - Pestaña "Histórico" (tabla de registros, issue #16).
 - Barra de estado.
 """
@@ -16,6 +16,7 @@ from collections.abc import Sequence
 from tkinter import messagebox, ttk
 
 from src.config import ConfigProblem, ThingSpeakConfig
+from src.ui.write_form import ManualEntryForm, SampleWriter
 
 APP_TITLE = "Stark Reactor IoT Monitor"
 CHANNEL_URL_TEMPLATE = "https://thingspeak.mathworks.com/channels/{channel_id}"
@@ -85,11 +86,35 @@ class ReactorMonitorApp(tk.Tk):
         notebook.add(self.write_tab, text="Enviar muestra")
         notebook.add(self.history_tab, text="Histórico")
 
-        # Contenido provisional hasta implementar #15 y #16.
-        ttk.Label(self.write_tab, text="Formulario de entrada manual (pendiente, issue #15).").pack(
-            anchor=tk.W
+        writer, disabled_reason = self._create_writer()
+        self.write_form = ManualEntryForm(
+            self.write_tab,
+            writer=writer,
+            disabled_reason=disabled_reason,
+            on_status=self.set_status,
         )
+        self.write_form.pack(fill=tk.BOTH, expand=True)
+
+        # Contenido provisional hasta implementar #16.
         ttk.Label(self.history_tab, text="Tabla de histórico (pendiente, issue #16).").pack(anchor=tk.W)
+
+    def _create_writer(self) -> tuple[SampleWriter | None, str | None]:
+        """Crea el servicio de escritura con la configuración activa, si es posible."""
+        if not self.config_data.can_write:
+            return None, (
+                "Envío desactivado: falta configurar THINGSPEAK_WRITE_API_KEY en el archivo .env. "
+                "Puede seguir consultando el histórico."
+            )
+        try:
+            from src.services.writer import ThingSpeakWriter
+        except ImportError:
+            return None, "Envío desactivado: no se encuentra el servicio de escritura (src/services/writer.py)."
+        writer = ThingSpeakWriter(
+            write_api_key=self.config_data.write_api_key,
+            base_url=self.config_data.base_url,
+            timeout_sec=max(1, round(self.config_data.timeout)),
+        )
+        return writer, None
 
     def _build_status_bar(self) -> None:
         bar = ttk.Frame(self, padding=(16, 4))
