@@ -4,7 +4,7 @@ Estructura base de la interfaz:
 - Cabecera con el canal configurado.
 - Aviso de configuración cuando faltan variables obligatorias.
 - Pestaña "Enviar muestra" (formulario manual, issue #15).
-- Pestaña "Histórico" (tabla de registros, issue #16).
+- Pestaña "Histórico" (tabla de registros, `src/ui/history_view.py`).
 - Barra de estado.
 """
 
@@ -16,6 +16,8 @@ from collections.abc import Sequence
 from tkinter import messagebox, ttk
 
 from src.config import ConfigProblem, ThingSpeakConfig
+from src.services.read_service import ReadResult, get_latest_readings
+from src.ui.history_view import HistoryView
 
 APP_TITLE = "Stark Reactor IoT Monitor"
 CHANNEL_URL_TEMPLATE = "https://thingspeak.mathworks.com/channels/{channel_id}"
@@ -85,11 +87,23 @@ class ReactorMonitorApp(tk.Tk):
         notebook.add(self.write_tab, text="Enviar muestra")
         notebook.add(self.history_tab, text="Histórico")
 
-        # Contenido provisional hasta implementar #15 y #16.
+        # Contenido provisional hasta implementar #15.
         ttk.Label(self.write_tab, text="Formulario de entrada manual (pendiente, issue #15).").pack(
             anchor=tk.W
         )
-        ttk.Label(self.history_tab, text="Tabla de histórico (pendiente, issue #16).").pack(anchor=tk.W)
+        self.history_view = HistoryView(
+            self.history_tab,
+            fetch=self._fetch_readings,
+            disabled_reason=None if self.config_data.can_read else (
+                "Consulta desactivada: THINGSPEAK_CHANNEL_ID no es válido. Revise el archivo .env."
+            ),
+            on_status=self.set_status,
+        )
+        self.history_view.pack(fill=tk.BOTH, expand=True)
+
+    def _fetch_readings(self, results: int) -> ReadResult:
+        """Consulta los últimos registros con la configuración activa (se ejecuta en segundo plano)."""
+        return get_latest_readings(results=results, config=self.config_data)
 
     def _build_status_bar(self) -> None:
         bar = ttk.Frame(self, padding=(16, 4))
@@ -124,5 +138,6 @@ def run_app(config: ThingSpeakConfig, problems: Sequence[ConfigProblem] = ()) ->
         print(f"[ERROR] No se pudo abrir la interfaz gráfica: {exc}", file=sys.stderr)
         return 1
     app.after(200, app.show_config_errors)
+    app.after(300, app.history_view.refresh)
     app.mainloop()
     return 0
