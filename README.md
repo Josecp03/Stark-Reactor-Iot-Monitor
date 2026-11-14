@@ -79,7 +79,20 @@ Las diez muestras del profesorado están en [data/reactor_samples.csv](data/reac
 - [src/main.py](src/main.py) arranca la aplicación y [src/config.py](src/config.py) carga la configuración.
 - [src/ui](src/ui) contiene el formulario y el histórico. [src/services](src/services) hace las peticiones a ThingSpeak.
 - [src/validation.py](src/validation.py) contiene las reglas de validación que comparten el formulario y el servicio de escritura.
-- [Integración con ThingSpeak](docs/thingspeak-api.md), [capturas](docs/capturas) y [plan del equipo](TASKS.md).
+- La documentación técnica recoge la configuración del canal y las peticiones HTTP, el contrato de lectura y el servicio de escritura. [ThingSpeak](docs/thingspeak-api.md) · [Lectura](docs/read-contract.md) · [Escritura](docs/writer.md)
+- Las capturas recogen la configuración del canal y el uso de la aplicación. [Capturas](docs/capturas)
+
+## Organización del equipo
+
+El grupo repartió las responsabilidades entre sus integrantes y gestionó las tareas mediante issues de GitHub. Cada conjunto de issues se identificó con una etiqueta de rol y se siguió en el tablero del proyecto. [Plan de tareas](TASKS.md) · [Tablero del equipo](https://github.com/users/Josecp03/projects/2)
+
+| Rol | Responsabilidad |
+| --- | --- |
+| `role:platform` | Configuración del canal ThingSpeak y preparación de las muestras de prueba. |
+| `role:read` | Consulta y normalización de las mediciones. |
+| `role:write` | Validación y envío de muestras a ThingSpeak. |
+| `role:ui` | Interfaz de escritorio e integración de lectura y escritura. |
+| `role:qa-docs` | Pruebas de integración y documentación de la entrega. |
 
 ## Entrega académica
 
