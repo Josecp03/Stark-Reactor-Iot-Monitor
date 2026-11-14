@@ -8,6 +8,7 @@ seguros para el canal público de ThingSpeak (3566091).
 from __future__ import annotations
 
 import os
+from math import isfinite
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -147,7 +148,7 @@ class ThingSpeakConfig:
         raw_timeout = os.getenv("THINGSPEAK_HTTP_TIMEOUT", str(DEFAULT_HTTP_TIMEOUT)).strip()
         try:
             timeout = float(raw_timeout)
-            if timeout <= 0:
+            if not isfinite(timeout) or timeout <= 0:
                 timeout = DEFAULT_HTTP_TIMEOUT
         except ValueError:
             timeout = DEFAULT_HTTP_TIMEOUT

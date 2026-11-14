@@ -26,6 +26,7 @@ from tkinter import ttk
 from typing import Any, Protocol
 
 from src.config import PROJECT_ROOT
+from src.validation import FIELD_RANGES, ValueErrorKind, parse_measurement
 
 SAMPLES_CSV_PATH = PROJECT_ROOT / "data" / "reactor_samples.csv"
 
@@ -53,8 +54,8 @@ class FormField:
 # Rangos solo donde el enunciado los define (estabilidad y refrigerante: 0–100).
 FORM_FIELDS: tuple[FormField, ...] = (
     FormField("field1", "Carga de energía del núcleo", "%", "Ej.: 52.4"),
-    FormField("field2", "Estabilidad del campo", "0–100", "Entre 0 y 100", 0.0, 100.0),
-    FormField("field3", "Flujo de refrigerante de vibranium", "0–100", "Entre 0 y 100", 0.0, 100.0),
+    FormField("field2", "Estabilidad del campo", "0–100", "Entre 0 y 100", *FIELD_RANGES["field2"]),
+    FormField("field3", "Flujo de refrigerante de vibranium", "0–100", "Entre 0 y 100", *FIELD_RANGES["field3"]),
     FormField("field4", "Latencia del protocolo JARVIS", "ms", "Ej.: 118.6"),
     FormField("field5", "Consumo energético de los repulsores", "W", "Ej.: 42.3"),
 )
@@ -80,18 +81,14 @@ def parse_field_value(raw: str, spec: FormField) -> tuple[float | None, str | No
 
     Acepta coma o punto como separador decimal.
     """
-    text = raw.strip().replace(",", ".")
-    if not text:
+    value, error = parse_measurement(raw, spec.min_value, spec.max_value)
+    if error is ValueErrorKind.REQUIRED:
         return None, f"«{spec.label}» es obligatorio."
-    try:
-        value = float(text)
-    except ValueError:
+    if error is ValueErrorKind.NOT_NUMERIC:
         return None, f"«{spec.label}» debe ser un número (por ejemplo 52.4)."
-    if not math.isfinite(value):
+    if error is ValueErrorKind.NOT_FINITE:
         return None, f"«{spec.label}» debe ser un número válido."
-    if spec.min_value is not None and value < spec.min_value:
-        return None, f"«{spec.label}» debe estar entre {spec.min_value:g} y {spec.max_value:g}."
-    if spec.max_value is not None and value > spec.max_value:
+    if error is ValueErrorKind.OUT_OF_RANGE:
         return None, f"«{spec.label}» debe estar entre {spec.min_value:g} y {spec.max_value:g}."
     return value, None
 
@@ -299,7 +296,7 @@ class ManualEntryForm(ttk.Frame):
 
     def _handle_result(self, result: Any) -> None:
         if isinstance(result, Exception):
-            message = f"Error inesperado al enviar la muestra: {result}"
+            message = "Error inesperado al enviar la muestra."
             self.show_message(message, COLOR_ERROR)
             self._notify_status(message)
             return

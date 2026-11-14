@@ -382,7 +382,7 @@ def fetch_channel_feeds(
             ok=False,
             status_code=None,
             payload=None,
-            error_message=f"Error de conexión al consultar ThingSpeak: {exc}",
+            error_message="Error de conexión al consultar ThingSpeak.",
             url=url,
         )
 

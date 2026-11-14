@@ -34,17 +34,17 @@ La respuesta contiene información del canal y una colección `feeds` con las me
 
 ## 4. Escritura mediante API REST
 
-**Método:** POST
+**Método:** GET
 
 **Endpoint:**
 
 `https://api.thingspeak.com/update`
 
-La petición debe incluir la clave de escritura y los valores de los campos.
+La petición incluye la clave de escritura y los valores de los campos como parámetros de consulta.
 
-Ejemplo de cuerpo `application/x-www-form-urlencoded`:
+Ejemplo con una clave de marcador:
 
-`api_key=TU_WRITE_API_KEY&field1=52.4&field2=96.8&field3=35.2&field4=118.6&field5=42.3`
+`https://api.thingspeak.com/update?api_key=TU_WRITE_API_KEY&field1=52.4&field2=96.8&field3=35.2&field4=118.6&field5=42.3`
 
 La clave real de escritura debe mantenerse privada y no almacenarse en GitHub.
 
@@ -70,16 +70,16 @@ Esto confirma que el canal acepta registros y permite consultarlos mediante su A
 
 ## 6. Restricciones y errores
 
-- Debe respetarse el intervalo mínimo entre actualizaciones permitido por ThingSpeak.
+- La aplicación espera 15 segundos tras cada escritura confirmada antes de habilitar el siguiente envío.
 - Una clave de escritura inválida puede provocar que el registro no se almacene.
 - Las peticiones pueden fallar por problemas de red o indisponibilidad del servicio.
-- Los módulos de lectura y escritura deberán gestionar los errores HTTP, las respuestas vacías y los tiempos de espera.
+- Los servicios informan de errores HTTP, respuestas inválidas y tiempos de espera. El histórico muestra un aviso cuando el canal todavía no tiene registros.
 
 ## 7. Datos de prueba
 
 El archivo `data/reactor_samples.csv` contiene las diez mediciones proporcionadas por el profesor.
 
-Estas muestras se utilizarán durante las pruebas de integración de la aplicación.
+El botón **Rellenar** permite copiar cualquiera de estas muestras al formulario para probar el envío.
 
 ## 8. Evidencias
 

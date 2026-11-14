@@ -47,7 +47,7 @@ El envío de los datos se realiza empleando el método HTTP `GET` contra la API 
 
 ThingSpeak establece por defecto una restricción temporal entre escrituras consecutivas (fijada en **15 segundos** en la capa gratuita). Para evitar bloqueos por parte de la plataforma y mejorar la experiencia de usuario:
 
-1. **Protección Anti-Doble Clic (`_in_flight`):** Se bloquean peticiones concurrentes si ya hay un envío en curso.
+1. **Protección contra envíos simultáneos:** El servicio admite un único envío en curso por instancia.
 2. **Temporizador de Cooldown (`time.monotonic()`):** 
    Tras cada envío exitoso, el servicio registra la marca temporal exacta.
    Si el usuario intenta enviar otra muestra antes de que transcurran 15 segundos, el método `send_sample` frena la ejecución localmente sin realizar peticiones de red, informando mediante `cooldown_remaining` del tiempo exacto que falta para permitir el siguiente envío.
@@ -66,9 +66,4 @@ El módulo cuenta con una completa batería de pruebas unitarias implementada co
 Para ejecutar la batería de tests de escritura desde la raíz del proyecto con el entorno virtual activo:
 ```powershell
 python -m pytest tests/test_writer.py -v
-```
-
----
-
-
 ```

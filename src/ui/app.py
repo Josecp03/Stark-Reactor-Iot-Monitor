@@ -125,7 +125,7 @@ class ReactorMonitorApp(tk.Tk):
         writer = ThingSpeakWriter(
             write_api_key=self.config_data.write_api_key,
             base_url=self.config_data.base_url,
-            timeout_sec=max(1, round(self.config_data.timeout)),
+            timeout_sec=self.config_data.timeout,
         )
         return writer, None
 
