@@ -18,6 +18,7 @@ from tkinter import messagebox, ttk
 
 from src.config import ConfigProblem, ThingSpeakConfig
 from src.services.read_service import ReadResult, get_latest_readings
+from src.ui.charts_view import TelemetryChartsView
 from src.ui.history_view import HistoryView
 from src.ui.write_form import ManualEntryForm, SampleWriter
 
@@ -112,8 +113,10 @@ class ReactorMonitorApp(tk.Tk):
 
         self.write_tab = ttk.Frame(notebook, padding=16)
         self.history_tab = ttk.Frame(notebook, padding=16)
+        self.charts_tab = ttk.Frame(notebook, padding=16)
         notebook.add(self.write_tab, text="Enviar muestra")
         notebook.add(self.history_tab, text="Histórico")
+        notebook.add(self.charts_tab, text="Gráficas")
 
         writer, disabled_reason = self._create_writer()
         self.write_form = ManualEntryForm(
@@ -125,6 +128,12 @@ class ReactorMonitorApp(tk.Tk):
         )
         self.write_form.pack(fill=tk.BOTH, expand=True)
 
+        self.charts_view = TelemetryChartsView(
+            self.charts_tab,
+            on_refresh=self._on_sample_sent,
+        )
+        self.charts_view.pack(fill=tk.BOTH, expand=True)
+
         self.history_view = HistoryView(
             self.history_tab,
             fetch=self._fetch_readings,
@@ -132,11 +141,12 @@ class ReactorMonitorApp(tk.Tk):
                 "Consulta desactivada: THINGSPEAK_CHANNEL_ID no es válido. Revise el archivo .env."
             ),
             on_status=self.set_status,
+            on_records=self.charts_view.set_records,
         )
         self.history_view.pack(fill=tk.BOTH, expand=True)
 
-    def _on_sample_sent(self, _entry_id: int | None) -> None:
-        """Actualiza automáticamente el histórico cuando se guarda una muestra."""
+    def _on_sample_sent(self, _entry_id: int | None = None) -> None:
+        """Actualiza automáticamente el histórico y las gráficas."""
         self.history_view.refresh()
 
     def _fetch_readings(self, results: int) -> ReadResult:

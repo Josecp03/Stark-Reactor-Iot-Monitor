@@ -118,6 +118,7 @@ class HistoryView(ttk.Frame):
         fetch: Fetcher | None,
         disabled_reason: str | None = None,
         on_status: Callable[[str], None] | None = None,
+        on_records: Callable[[list[ReactorReading]], None] | None = None,
     ) -> None:
         super().__init__(master)
         if fetch is None and not disabled_reason:
@@ -125,6 +126,7 @@ class HistoryView(ttk.Frame):
         self.fetch = fetch
         self.disabled_reason = disabled_reason
         self.on_status = on_status
+        self.on_records = on_records
 
         self.results_var = tk.StringVar(value=str(DEFAULT_RESULTS))
         self.message_var = tk.StringVar()
@@ -281,6 +283,8 @@ class HistoryView(ttk.Frame):
         for reading in ordered:
             self.tree.insert("", tk.END, iid=str(reading.entry_id), values=reading_to_row(reading))
         self._update_diagnostic(ordered[0] if ordered else None)
+        if self.on_records is not None:
+            self.on_records(list(records))
 
     def _update_diagnostic(self, latest: ReactorReading | None) -> None:
         level, text, color = evaluate_reactor_status(latest)
