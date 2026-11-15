@@ -182,6 +182,18 @@ class ManualEntryFormTests(unittest.TestCase):
         finally:
             app.destroy()
 
+    def test_app_header_opens_channel_in_browser(self) -> None:
+        config = ThingSpeakConfig(channel_id="3566091", write_api_key="TESTKEY123")
+        app = ReactorMonitorApp(config)
+        app.withdraw()
+        try:
+            with patch("src.ui.app.webbrowser.open", return_value=True) as mock_open:
+                app.open_channel_in_browser()
+                mock_open.assert_called_once_with("https://thingspeak.mathworks.com/channels/3566091")
+                self.assertIn("3566091", app.status_var.get())
+        finally:
+            app.destroy()
+
 
 if __name__ == "__main__":
     unittest.main()

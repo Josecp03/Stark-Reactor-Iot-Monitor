@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import sys
 import tkinter as tk
+import webbrowser
 from collections.abc import Sequence
 from tkinter import messagebox, ttk
 
@@ -47,15 +48,41 @@ class ReactorMonitorApp(tk.Tk):
 
     # --- Construcción de la interfaz -------------------------------------------------
 
+    @property
+    def channel_url(self) -> str:
+        """URL pública del canal ThingSpeak configurado."""
+        return CHANNEL_URL_TEMPLATE.format(channel_id=self.config_data.channel_id)
+
     def _build_header(self) -> None:
         header = ttk.Frame(self, padding=(16, 12))
         header.pack(fill=tk.X)
         ttk.Label(header, text=APP_TITLE, font=("Segoe UI", 16, "bold")).pack(anchor=tk.W)
-        ttk.Label(
-            header,
-            text=f"Canal ThingSpeak {self.config_data.channel_id} · "
-            + CHANNEL_URL_TEMPLATE.format(channel_id=self.config_data.channel_id),
-        ).pack(anchor=tk.W)
+
+        sub = ttk.Frame(header)
+        sub.pack(fill=tk.X, pady=(2, 0))
+        ttk.Label(sub, text=f"Canal ThingSpeak {self.config_data.channel_id} · ").pack(side=tk.LEFT)
+        self.channel_link = tk.Label(
+            sub,
+            text=self.channel_url,
+            fg="#0969da",
+            cursor="hand2",
+            font=("Segoe UI", 9, "underline"),
+        )
+        self.channel_link.pack(side=tk.LEFT)
+        self.channel_link.bind("<Button-1>", self.open_channel_in_browser)
+
+        self.open_channel_button = ttk.Button(
+            sub,
+            text="Abrir canal en navegador",
+            command=self.open_channel_in_browser,
+        )
+        self.open_channel_button.pack(side=tk.RIGHT)
+
+    def open_channel_in_browser(self, _event: object = None) -> bool:
+        """Abre la vista pública del canal ThingSpeak en el navegador predeterminado."""
+        opened = webbrowser.open(self.channel_url)
+        self.set_status(f"Canal abierto en el navegador: {self.channel_url}")
+        return bool(opened)
 
     def _build_config_warning(self) -> None:
         box = tk.Frame(self, bg="#fff4ce", highlightbackground="#e0b800", highlightthickness=1)
