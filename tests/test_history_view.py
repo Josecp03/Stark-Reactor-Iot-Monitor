@@ -11,7 +11,13 @@ import tkinter as tk
 import unittest
 
 from src.services.read_service import ReactorReading, ReadResult
-from src.ui.history_view import EMPTY_VALUE, HistoryView, format_value, reading_to_row
+from src.ui.history_view import (
+    EMPTY_VALUE,
+    HistoryView,
+    evaluate_reactor_status,
+    format_value,
+    reading_to_row,
+)
 
 CHANNEL_ID = "3566091"
 READINGS = [
@@ -49,6 +55,15 @@ class FormattingTests(unittest.TestCase):
     def test_reading_to_row_keeps_column_order(self) -> None:
         row = reading_to_row(READINGS[2])
         self.assertEqual(row, ("3", "2026-11-08 17:03:00 UTC", "63.9", EMPTY_VALUE, "48.6", "162.8", "51.7"))
+
+    def test_evaluate_reactor_status_levels(self) -> None:
+        self.assertEqual(evaluate_reactor_status(None)[0], "SIN_DATOS")
+        self.assertEqual(evaluate_reactor_status(READINGS[0])[0], "NOMINAL")
+        self.assertEqual(evaluate_reactor_status(READINGS[2])[0], "PRECAUCION")
+        critical = ReactorReading(10, "2026-11-08T17:10:00Z", 95.8, 67.9, 96.4, 249.8, 94.1)
+        level, text, _color = evaluate_reactor_status(critical)
+        self.assertEqual(level, "CRITICO")
+        self.assertIn("sobrecarga térmica", text)
 
 
 class HistoryViewTests(unittest.TestCase):
@@ -89,6 +104,8 @@ class HistoryViewTests(unittest.TestCase):
         self.assertEqual(rows[0][3], EMPTY_VALUE)
         self.assertIn("3 registros", view.message_var.get())
         self.assertIn("Última consulta", view.updated_var.get())
+        self.assertEqual(view.diagnostic_level, "PRECAUCION")
+        self.assertIn("PRECAUCIÓN JARVIS", view.diagnostic_var.get())
         self.assertFalse(view.refresh_button.instate(["disabled"]))
 
     def test_selected_number_of_records_is_requested(self) -> None:
