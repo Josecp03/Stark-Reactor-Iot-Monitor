@@ -1,0 +1,17 @@
+[project]
+name = "stark-reactor-iot-monitor"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[tool.uv]
+managed = true
+python-preference = "only-managed"
