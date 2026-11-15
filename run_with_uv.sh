@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -uo pipefail
+
+# Ir al directorio raíz del proyecto (compatible con Linux y macOS)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Crear .env desde .env.example si aún no existe
 if [ ! -f ".env" ] && [ -f ".env.example" ]; then

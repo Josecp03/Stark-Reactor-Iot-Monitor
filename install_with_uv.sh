@@ -73,6 +73,7 @@ uv run python -m src.main --check-config || true
 
 echo ""
 echo "Instalación completada. Comandos disponibles:"
+echo "  ./run_with_uv.sh                           # Comprobar, pasar tests y abrir la app"
 echo "  uv run python -m src.main                  # Abrir aplicación"
 echo "  uv run python -m src.main --check-config   # Comprobar configuración"
 echo "  uv run pytest -q                           # Ejecutar tests"
