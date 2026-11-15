@@ -32,6 +32,9 @@ fi
 
 # 2. Instalar entorno virtual y dependencias (usando Python gestionado por uv con tkinter)
 echo "[2/3] Sincronizando entorno virtual y dependencias con uv..."
+if [ -d ".venv/Scripts" ]; then
+    rm -rf .venv
+fi
 uv python install 3.12
 if [ -f "pyproject.toml" ]; then
     uv sync --managed-python --python 3.12

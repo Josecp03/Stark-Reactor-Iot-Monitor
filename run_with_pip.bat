@@ -5,9 +5,16 @@ chcp 65001 >nul 2>nul
 REM Ir al directorio raiz del proyecto
 cd /d "%~dp0"
 
+REM Si .venv no existe o le falta tkinter/pytest, ejecutar install_with_pip.bat
 if not exist ".venv\Scripts\python.exe" (
-    echo [ERROR] No se encontro el entorno virtual '.venv'. Ejecuta primero: install_with_pip.bat
-    exit /b 1
+    call "%~dp0install_with_pip.bat"
+    if errorlevel 1 exit /b 1
+) else (
+    .\.venv\Scripts\python.exe -c "import tkinter, pytest, requests" >nul 2>nul
+    if errorlevel 1 (
+        call "%~dp0install_with_pip.bat"
+        if errorlevel 1 exit /b 1
+    )
 )
 
 REM Crear .env desde .env.example si aun no existe

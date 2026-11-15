@@ -25,6 +25,10 @@ if errorlevel 1 (
 
 REM 2. Instalar entorno virtual y dependencias (usando Python 3.12 gestionado por uv con tkinter)
 echo [2/3] Sincronizando entorno virtual y dependencias con uv...
+if exist ".venv\lib64" (
+    rmdir ".venv\lib64" >nul 2>nul
+    rmdir /s /q ".venv" >nul 2>nul
+)
 uv python install 3.12
 if errorlevel 1 exit /b 1
 
@@ -60,10 +64,10 @@ if not errorlevel 1 (
         set /p "WRITE_KEY=Introduce THINGSPEAK_WRITE_API_KEY (o pulsa Enter para modo solo lectura): "
     )
     if not "!WRITE_KEY!"=="" (
-        powershell -NoProfile -Command "(Get-Content '.env') -replace '^THINGSPEAK_WRITE_API_KEY=.*', ('THINGSPEAK_WRITE_API_KEY=' + $env:WRITE_KEY) | Set-Content '.env' -Encoding UTF8"
+        powershell -NoProfile -Command "$c = Get-Content '.env'; $c -replace '^THINGSPEAK_WRITE_API_KEY=.*', ('THINGSPEAK_WRITE_API_KEY=' + $env:WRITE_KEY) | Set-Content '.env' -Encoding UTF8"
         echo   -^> 'THINGSPEAK_WRITE_API_KEY' actualizada en '.env'.
     ) else (
-        echo   -^> Aviso: 'THINGSPEAK_WRITE_API_KEY' sigue como REEMPLAZAR (la app abrira en modo solo lectura).
+        echo   -^> Aviso: 'THINGSPEAK_WRITE_API_KEY' sigue como REEMPLAZAR - modo solo lectura.
     )
 )
 

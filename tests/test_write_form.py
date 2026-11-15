@@ -170,9 +170,14 @@ class ManualEntryFormTests(unittest.TestCase):
         self.assertEqual(form.vars["field4"].get(), "118.6")
         self.assertEqual(writer.calls, [])
 
+
+class ReactorMonitorAppTests(unittest.TestCase):
     def test_app_wires_write_form_on_sent_to_history_refresh(self) -> None:
         config = ThingSpeakConfig(channel_id="3566091", write_api_key="TESTKEY123")
-        app = ReactorMonitorApp(config)
+        try:
+            app = ReactorMonitorApp(config)
+        except tk.TclError as exc:
+            self.skipTest(f"Tkinter no disponible: {exc}")
         app.withdraw()
         try:
             with patch.object(app.history_view, "refresh") as mock_refresh:
@@ -184,7 +189,10 @@ class ManualEntryFormTests(unittest.TestCase):
 
     def test_app_header_opens_channel_in_browser(self) -> None:
         config = ThingSpeakConfig(channel_id="3566091", write_api_key="TESTKEY123")
-        app = ReactorMonitorApp(config)
+        try:
+            app = ReactorMonitorApp(config)
+        except tk.TclError as exc:
+            self.skipTest(f"Tkinter no disponible: {exc}")
         app.withdraw()
         try:
             with patch("src.ui.app.webbrowser.open", return_value=True) as mock_open:

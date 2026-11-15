@@ -5,9 +5,10 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-if [ ! -x ".venv/bin/python" ]; then
-    echo "[ERROR] No se encontró el entorno virtual '.venv'. Ejecuta primero: bash install_with_pip.sh" >&2
-    exit 1
+# Si .venv no existe, pertenece a otro SO o su Python no tiene tkinter/pytest, ejecutar install_with_pip.sh
+if [ ! -x ".venv/bin/python" ] || ! ./.venv/bin/python -c "import tkinter, pytest, requests" >/dev/null 2>&1; then
+    echo "Preparando entorno virtual '.venv' con pip y tkinter..."
+    bash "$SCRIPT_DIR/install_with_pip.sh"
 fi
 
 # Crear .env desde .env.example si aún no existe

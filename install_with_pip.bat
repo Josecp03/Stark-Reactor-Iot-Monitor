@@ -7,31 +7,59 @@ cd /d "%~dp0"
 
 echo === Stark Reactor IoT Monitor - Instalacion con pip (Windows) ===
 
-REM 1. Localizar interprete de Python
+REM 1. Localizar un interprete de Python 3.12+ (o 3.11+) real que incluya tkinter y venv
 set "PYTHON_CMD="
-python --version >nul 2>nul
-if not errorlevel 1 (
-    set "PYTHON_CMD=python"
-) else (
-    py -3 --version >nul 2>nul
+if exist "%APPDATA%\uv\python\cpython-3.12-windows-x86_64-none\python.exe" (
+    set "PYTHON_CMD=%APPDATA%\uv\python\cpython-3.12-windows-x86_64-none\python.exe"
+)
+
+if "!PYTHON_CMD!"=="" (
+    py -3.12 -c "import sys, tkinter, venv" >nul 2>nul
     if not errorlevel 1 (
-        set "PYTHON_CMD=py -3"
+        for /f "delims=" %%p in ('py -3.12 -c "import sys; print(sys.executable)"') do set "PYTHON_CMD=%%p"
     )
 )
 
 if "!PYTHON_CMD!"=="" (
-    echo [ERROR] No se encontro Python 3 instalado. Instala Python 3.11+ o usa install_with_uv.bat.
+    where uv >nul 2>nul
+    if not errorlevel 1 (
+        echo [1/3] Obteniendo Python 3.12 con tkinter...
+        uv python install 3.12 >nul 2>nul
+        for /f "delims=" %%p in ('uv python find --managed-python 3.12 2^>nul') do set "PYTHON_CMD=%%p"
+    )
+)
+
+if "!PYTHON_CMD!"=="" (
+    python -c "import sys, tkinter, venv; sys.exit(0 if sys.version_info >= (3, 11) else 1)" >nul 2>nul
+    if not errorlevel 1 (
+        for /f "delims=" %%p in ('python -c "import sys; print(sys.executable)"') do set "PYTHON_CMD=%%p"
+    )
+)
+
+if "!PYTHON_CMD!"=="" (
+    py -3 -c "import sys, tkinter, venv; sys.exit(0 if sys.version_info >= (3, 11) else 1)" >nul 2>nul
+    if not errorlevel 1 (
+        for /f "delims=" %%p in ('py -3 -c "import sys; print(sys.executable)"') do set "PYTHON_CMD=%%p"
+    )
+)
+
+if "!PYTHON_CMD!"=="" (
+    echo [ERROR] No se encontro Python 3.11+ con tkinter instalado.
     exit /b 1
 )
 
-for /f "delims=" %%v in ('!PYTHON_CMD! --version') do set "PY_VER=%%v"
-echo [1/3] Usando !PY_VER!.
+for /f "delims=" %%v in ('"!PYTHON_CMD!" --version') do set "PY_VER=%%v"
+echo [1/3] Usando !PY_VER! (!PYTHON_CMD!).
 
-REM 2. Crear entorno virtual .venv e instalar requirements.txt con pip
-echo [2/3] Creando entorno virtual '.venv' e instalando requirements.txt...
-!PYTHON_CMD! -m venv .venv
+REM 2. Recrear entorno virtual .venv limpio con pip e instalar requirements.txt
+echo [2/3] Creando entorno virtual '.venv' con pip e instalando requirements.txt...
+if exist ".venv\lib64" rmdir ".venv\lib64" >nul 2>nul
+if exist ".venv" rmdir /s /q ".venv" >nul 2>nul
+
+"!PYTHON_CMD!" -m venv .venv
 if errorlevel 1 exit /b 1
 
+.\.venv\Scripts\python.exe -m ensurepip --upgrade >nul 2>nul
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 if errorlevel 1 exit /b 1
 
@@ -60,10 +88,10 @@ if not errorlevel 1 (
         set /p "WRITE_KEY=Introduce THINGSPEAK_WRITE_API_KEY (o pulsa Enter para modo solo lectura): "
     )
     if not "!WRITE_KEY!"=="" (
-        powershell -NoProfile -Command "(Get-Content '.env') -replace '^THINGSPEAK_WRITE_API_KEY=.*', ('THINGSPEAK_WRITE_API_KEY=' + $env:WRITE_KEY) | Set-Content '.env' -Encoding UTF8"
+        powershell -NoProfile -Command "$c = Get-Content '.env'; $c -replace '^THINGSPEAK_WRITE_API_KEY=.*', ('THINGSPEAK_WRITE_API_KEY=' + $env:WRITE_KEY) | Set-Content '.env' -Encoding UTF8"
         echo   -^> 'THINGSPEAK_WRITE_API_KEY' actualizada en '.env'.
     ) else (
-        echo   -^> Aviso: 'THINGSPEAK_WRITE_API_KEY' sigue como REEMPLAZAR (la app abrira en modo solo lectura).
+        echo   -^> Aviso: 'THINGSPEAK_WRITE_API_KEY' sigue como REEMPLAZAR - modo solo lectura.
     )
 )
 
@@ -71,9 +99,9 @@ REM Comprobar que la configuracion es valida antes de ejecutar la aplicacion
 .\.venv\Scripts\python.exe -m src.main --check-config
 
 echo.
-echo Instalacion completada. Comandos disponibles:
-echo   run_with_pip.bat                                   # Comprobar, pasar tests y abrir la app
-echo   .\.venv\Scripts\python.exe -m src.main             # Abrir aplicacion
+echo Instalacion con pip completada. Comandos disponibles:
+echo   run_with_pip.bat                                       # Comprobar, pasar tests y abrir la app
+echo   .\.venv\Scripts\python.exe -m src.main                 # Abrir aplicacion
 echo   .\.venv\Scripts\python.exe -m src.main --check-config  # Comprobar configuracion
-echo   .\.venv\Scripts\python.exe -m pytest -q            # Ejecutar tests
+echo   .\.venv\Scripts\python.exe -m pytest -q                # Ejecutar tests
 endlocal
