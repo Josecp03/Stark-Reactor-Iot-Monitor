@@ -1,5 +1,7 @@
 """Reglas de validación de las muestras del reactor."""
 
+from __future__ import annotations
+
 import math
 from enum import Enum
 

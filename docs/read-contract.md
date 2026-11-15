@@ -1,6 +1,6 @@
 # Contrato de Datos y Documentación del Módulo de Lectura (`role:read`)
 
-Este documento define el contrato de integración del servicio de lectura ([src/services/read_service.py](file:///Users/luismonzon/Documents/GitHub/Stark-Reactor-Iot-Monitor/src/services/read_service.py)) correspondiente a las tareas **P2-01**, **P2-02**, **P2-03** y **P2-04** para su consumo por:
+Este documento define el contrato de integración del servicio de lectura ([src/services/read_service.py](../src/services/read_service.py)) correspondiente a las tareas **P2-01**, **P2-02**, **P2-03** y **P2-04** para su consumo por:
 - **Persona 4 (`role:ui`)**: Vista de consulta e histórico en la interfaz de escritorio.
 - **Persona 5 (`role:qa-docs`)**: Matriz de pruebas, validación extremo a extremo y gráficas opcionales.
 
@@ -154,8 +154,8 @@ O con `pytest`:
 pytest -v
 ```
 
-Escenarios cubiertos en [tests/test_read_service.py](file:///Users/luismonzon/Documents/GitHub/Stark-Reactor-Iot-Monitor/tests/test_read_service.py):
-1. **Respuesta válida**: normalización completa de las 10 muestras oficiales de [data/reactor_samples.csv](file:///Users/luismonzon/Documents/GitHub/Stark-Reactor-Iot-Monitor/data/reactor_samples.csv).
+Escenarios cubiertos en [tests/test_read_service.py](../tests/test_read_service.py):
+1. **Respuesta válida**: normalización completa de las 10 muestras oficiales de [data/reactor_samples.csv](../data/reactor_samples.csv).
 2. **Canal sin registros**: respuesta con `"feeds": []` verificando `ok=True` e `is_empty=True`.
 3. **Campos ausentes y nulos**: `None`, `""`, `"null"`, `"NaN"`, `"inf"` y cadenas no numéricas convertidos a `None` sin pérdida del registro.
 4. **Fallos de red y API**: simulación de `Timeout`, `ConnectionError`, códigos HTTP `400`, `401`, `403`, `404`, `429`, `500`, `503` y respuestas con JSON corrupto.
