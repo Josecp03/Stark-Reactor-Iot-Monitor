@@ -1,15 +1,11 @@
-# Contrato de Datos y Documentación del Módulo de Lectura (`role:read`)
+# Módulo de Lectura (`src/services/read_service.py`)
 
-Este documento define el contrato de integración del servicio de lectura ([src/services/read_service.py](../src/services/read_service.py)) correspondiente a las tareas **P2-01**, **P2-02**, **P2-03** y **P2-04** para su consumo por:
-- **Persona 4 (`role:ui`)**: Vista de consulta e histórico en la interfaz de escritorio.
-- **Persona 5 (`role:qa-docs`)**: Matriz de pruebas, validación extremo a extremo y gráficas opcionales.
+Este documento describe el contrato de datos y las funciones públicas de [src/services/read_service.py](../src/services/read_service.py) empleadas por la vista de histórico y la vista de gráficas.
 
----
-
-## 1. Contrato de datos (`P2-01`)
+## 1. Contrato de datos
 
 ### 1.1 Metadatos de campos (`FIELD_SPECS`)
-La tupla inmutable `FIELD_SPECS` expone la definición oficial de los cinco campos del canal ThingSpeak `3566091`:
+La tupla inmutable `FIELD_SPECS` define los cinco campos del canal ThingSpeak `3566091`:
 
 | Clave técnica (`field_key`) | Clave semántica (`semantic_key`) | Etiqueta para UI (`label`) | Unidad / rango (`unit`) |
 | :--- | :--- | :--- | :--- |
@@ -77,9 +73,9 @@ class ReadResult:
 
 ---
 
-## 2. Interfaz pública del módulo (`P2-02` y `P2-03`)
+## 2. Interfaz pública del módulo
 
-### 2.1 Uso recomendado desde la UI (`Persona 4`)
+### 2.1 Uso desde la interfaz gráfica
 
 ```python
 from src.services.read_service import FIELD_SPECS, get_latest_readings
@@ -120,7 +116,7 @@ else:
 
 ---
 
-## 3. Verificación por CLI y Pruebas Automatizadas (`P2-04`)
+## 3. Verificación por CLI y pruebas automatizadas
 
 ### 3.1 Consultar el canal real `3566091` desde terminal (sin UI)
 

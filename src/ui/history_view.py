@@ -1,15 +1,4 @@
-"""Vista de consulta e histórico del canal ThingSpeak (P4-03, issue #16).
-
-Muestra en una tabla los últimos registros del canal obtenidos con el servicio
-de lectura (`get_latest_readings`), con su número de registro, fecha y los
-cinco valores del reactor con sus unidades.
-
-- Botón «Consultar / Actualizar» y selector del número de registros.
-- Consulta en segundo plano para no bloquear la ventana.
-- Mensajes diferenciados para: consultando, canal sin registros y error de
-  comunicación.
-- Registros más recientes primero.
-"""
+"""Vista de consulta e histórico del canal ThingSpeak."""
 
 from __future__ import annotations
 
@@ -145,8 +134,6 @@ class HistoryView(ttk.Frame):
         else:
             self.show_message("Pulse «Consultar / Actualizar» para ver los últimos registros del canal.")
 
-    # --- Construcción ----------------------------------------------------------------
-
     def _build(self) -> None:
         toolbar = ttk.Frame(self)
         toolbar.pack(fill=tk.X, pady=(0, 8))
@@ -205,8 +192,6 @@ class HistoryView(ttk.Frame):
         ttk.Label(self, text=legend, foreground="#6b6b6b", wraplength=880, justify=tk.LEFT).pack(
             fill=tk.X, pady=(8, 0)
         )
-
-    # --- Consulta --------------------------------------------------------------------
 
     @property
     def selected_results(self) -> int:
@@ -291,8 +276,6 @@ class HistoryView(ttk.Frame):
         self.diagnostic_level = level
         self.diagnostic_var.set(text)
         self.diagnostic_label.configure(fg=color)
-
-    # --- Mensajes --------------------------------------------------------------------
 
     def show_message(self, text: str, color: str = COLOR_INFO) -> None:
         self.message_var.set(text)

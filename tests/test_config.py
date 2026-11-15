@@ -1,7 +1,4 @@
-"""Pruebas de la configuración y del punto de entrada (P4-01, issue #14).
-
-Compatible con `pytest` y con `python -m unittest`.
-"""
+"""Pruebas de la configuración y del punto de entrada."""
 
 from __future__ import annotations
 

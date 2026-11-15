@@ -1,14 +1,4 @@
-"""Pruebas unitarias e integración simulada del servicio de lectura (P2-04).
-
-Cubre los escenarios definidos en TASKS.md para Persona 2 (`role:read`):
-1. Respuesta válida (incluyendo las 10 muestras oficiales de `data/reactor_samples.csv`).
-2. Canal sin registros (`feeds: []`).
-3. Campos ausentes, nulos (`None`), cadenas vacías y valores no numéricos.
-4. Fallos de red/API (timeout, error de conexión, códigos HTTP 400/401/404/429/500 y JSON inválido).
-5. Construcción de URL, paso de `results` y configuración desde `.env`.
-
-Compatible tanto con `pytest` como con `python3 -m unittest`.
-"""
+"""Pruebas del servicio de lectura."""
 
 from __future__ import annotations
 
@@ -70,7 +60,7 @@ def _load_csv_samples_as_thingspeak_payload() -> dict:
 
 
 class TestReadServiceContractAndNormalization(unittest.TestCase):
-    """Pruebas del contrato de datos (P2-01) y normalización JSON (P2-03)."""
+    """Pruebas del modelo de datos y normalización JSON."""
 
     def test_field_specs_define_five_reactor_variables(self) -> None:
         self.assertEqual(len(FIELD_SPECS), 5)
@@ -184,7 +174,7 @@ class TestReadServiceContractAndNormalization(unittest.TestCase):
 
 
 class TestReadServiceHttpAndErrors(unittest.TestCase):
-    """Pruebas de peticiones GET a ThingSpeak y gestión de fallos (P2-02 y P2-04)."""
+    """Pruebas de peticiones GET a ThingSpeak y gestión de fallos."""
 
     def test_build_feeds_url_includes_results_and_optional_api_key(self) -> None:
         url_public = build_feeds_url(channel_id="3566091", results=10)

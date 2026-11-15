@@ -1,7 +1,4 @@
-"""
-Módulo de escritura en ThingSpeak para Stark Reactor IoT Monitor.
-Implementa las tareas P3-01, P3-02 y P3-03 (role:write).
-"""
+"""Módulo de escritura en ThingSpeak para Stark Reactor IoT Monitor."""
 
 import time
 from dataclasses import dataclass
@@ -18,12 +15,12 @@ DEFAULT_COOLDOWN_SEC = 15.0
 
 @dataclass(frozen=True)
 class ReactorSample:
-    """Modelo de datos para los 5 campos del reactor Arc (P3-01)."""
-    core_load: float          # field1: Carga del núcleo (%)
-    field_stability: float    # field2: Estabilidad del campo (0-100)
-    coolant_flow: float       # field3: Flujo de refrigerante (0-100)
-    jarvis_latency: float     # field4: Latencia JARVIS (ms)
-    repulsor_power: float     # field5: Consumo de repulsores (W)
+    """Modelo de datos para los 5 campos del reactor Arc."""
+    core_load: float
+    field_stability: float
+    coolant_flow: float
+    jarvis_latency: float
+    repulsor_power: float
 
     def to_thingspeak_payload(self) -> Dict[str, float]:
         return {
@@ -37,7 +34,7 @@ class ReactorSample:
 
 @dataclass(frozen=True)
 class WriteResult:
-    """Contrato de respuesta hacia la interfaz de usuario (P3-01, P3-03)."""
+    """Resultado de una operación de escritura hacia la interfaz."""
     success: bool
     entry_id: Optional[int] = None
     error_message: Optional[str] = None
@@ -70,12 +67,7 @@ def validate_reactor_sample(
     jarvis_latency: Any,
     repulsor_power: Any,
 ) -> Tuple[Optional[ReactorSample], Optional[str]]:
-    """
-    Valida los 5 campos introducidos manualmente por el usuario (P3-01).
-    - Todos los campos deben ser numéricos.
-    - Estabilidad (field2) y refrigerante (field3) deben estar entre 0 y 100.
-    - No se imponen rangos máximos artificiales al resto de campos.
-    """
+    """Valida los 5 campos de una muestra del reactor."""
     try:
         return ReactorSample(
             core_load=_parse_numeric(core_load, "Carga del núcleo (field1)", "field1"),
@@ -89,7 +81,7 @@ def validate_reactor_sample(
 
 
 class ThingSpeakWriter:
-    """Cliente de escritura para ThingSpeak con control de frecuencia (P3-02, P3-03)."""
+    """Cliente de escritura para ThingSpeak con control de frecuencia."""
 
     def __init__(
         self,
@@ -112,7 +104,7 @@ class ThingSpeakWriter:
         self._send_lock = Lock()
 
     def get_cooldown_remaining(self) -> float:
-        """Devuelve los segundos restantes para permitir la siguiente escritura (P3-03)."""
+        """Devuelve los segundos restantes para permitir la siguiente escritura."""
         if self._last_write_timestamp is None:
             return 0.0
         elapsed = time.monotonic() - self._last_write_timestamp

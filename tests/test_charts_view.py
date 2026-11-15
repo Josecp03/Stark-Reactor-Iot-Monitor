@@ -1,4 +1,4 @@
-"""Pruebas de la vista de gráficas de evolución (P5-02)."""
+"""Pruebas de la vista de gráficas de evolución."""
 
 from __future__ import annotations
 

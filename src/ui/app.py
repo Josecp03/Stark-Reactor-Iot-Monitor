@@ -1,12 +1,4 @@
-"""Ventana principal de Stark Reactor IoT Monitor (P4-01, P4-02, P4-03).
-
-Estructura de la interfaz:
-- Cabecera con el canal configurado.
-- Aviso de configuración cuando faltan variables obligatorias.
-- Pestaña "Enviar muestra" (formulario manual, `src/ui/write_form.py`).
-- Pestaña "Histórico" (tabla de registros, `src/ui/history_view.py`).
-- Barra de estado.
-"""
+"""Ventana principal de Stark Reactor IoT Monitor."""
 
 from __future__ import annotations
 
@@ -46,8 +38,6 @@ class ReactorMonitorApp(tk.Tk):
         self._build_status_bar()
 
         self.set_status(self._initial_status())
-
-    # --- Construcción de la interfaz -------------------------------------------------
 
     @property
     def channel_url(self) -> str:
@@ -175,8 +165,6 @@ class ReactorMonitorApp(tk.Tk):
         bar = ttk.Frame(self, padding=(16, 4))
         bar.pack(fill=tk.X, side=tk.BOTTOM)
         ttk.Label(bar, textvariable=self.status_var, anchor=tk.W).pack(fill=tk.X)
-
-    # --- Estado ----------------------------------------------------------------------
 
     def _initial_status(self) -> str:
         if not self.config_data.can_read:

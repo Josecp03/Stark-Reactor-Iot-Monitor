@@ -1,8 +1,4 @@
-"""Pruebas de la vista de histórico (P4-03, issue #16).
-
-Usan una función de consulta simulada: no se hacen peticiones a ThingSpeak.
-Compatible con `pytest` y con `python -m unittest`.
-"""
+"""Pruebas de la vista de histórico."""
 
 from __future__ import annotations
 

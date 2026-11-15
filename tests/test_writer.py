@@ -1,7 +1,4 @@
-"""
-Pruebas unitarias para el módulo de escritura (P3-04).
-Cubre validación de campos, respuesta válida, respuesta 0, errores HTTP, timeout y cadencia (15s).
-"""
+"""Pruebas unitarias para el módulo de escritura."""
 
 from unittest.mock import MagicMock, patch
 import pytest

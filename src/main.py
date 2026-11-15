@@ -1,4 +1,4 @@
-"""Punto de entrada de Stark Reactor IoT Monitor (P4-01).
+"""Punto de entrada de Stark Reactor IoT Monitor.
 
 Uso desde la raíz del proyecto:
 

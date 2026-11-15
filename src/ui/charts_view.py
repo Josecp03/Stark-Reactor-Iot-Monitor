@@ -1,9 +1,4 @@
-"""Vista de gráficas de evolución temporal del reactor Arc (P5-02, opcional).
-
-Dibuja la evolución de cualquiera de las cinco variables del canal ThingSpeak
-utilizando únicamente `tkinter.Canvas` de la librería estándar (sin dependencias
-externas adicionales).
-"""
+"""Vista de gráficas de evolución temporal del reactor Arc."""
 
 from __future__ import annotations
 

@@ -1,8 +1,4 @@
-"""Pruebas del formulario de entrada manual (P4-02, issue #15).
-
-Usan un servicio de escritura simulado: no se hacen peticiones a ThingSpeak.
-Compatible con `pytest` y con `python -m unittest`.
-"""
+"""Pruebas del formulario de entrada manual."""
 
 from __future__ import annotations
 
