@@ -93,6 +93,7 @@ class ReactorMonitorApp(tk.Tk):
             self.write_tab,
             writer=writer,
             disabled_reason=disabled_reason,
+            on_sent=self._on_sample_sent,
             on_status=self.set_status,
         )
         self.write_form.pack(fill=tk.BOTH, expand=True)
@@ -106,6 +107,10 @@ class ReactorMonitorApp(tk.Tk):
             on_status=self.set_status,
         )
         self.history_view.pack(fill=tk.BOTH, expand=True)
+
+    def _on_sample_sent(self, _entry_id: int | None) -> None:
+        """Actualiza automáticamente el histórico cuando se guarda una muestra."""
+        self.history_view.refresh()
 
     def _fetch_readings(self, results: int) -> ReadResult:
         """Consulta los últimos registros con la configuración activa (se ejecuta en segundo plano)."""

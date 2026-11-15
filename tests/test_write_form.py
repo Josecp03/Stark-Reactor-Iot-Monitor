@@ -12,6 +12,10 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
+from unittest.mock import patch
+
+from src.config import ThingSpeakConfig
+from src.ui.app import ReactorMonitorApp
 from src.ui.write_form import FORM_FIELDS, ManualEntryForm, load_test_samples, parse_field_value
 
 VALID_SAMPLE = {"field1": "52.4", "field2": "96.8", "field3": "35.2", "field4": "118.6", "field5": "42.3"}
@@ -165,6 +169,18 @@ class ManualEntryFormTests(unittest.TestCase):
         form.fill_sample(VALID_SAMPLE)
         self.assertEqual(form.vars["field4"].get(), "118.6")
         self.assertEqual(writer.calls, [])
+
+    def test_app_wires_write_form_on_sent_to_history_refresh(self) -> None:
+        config = ThingSpeakConfig(channel_id="3566091", write_api_key="TESTKEY123")
+        app = ReactorMonitorApp(config)
+        app.withdraw()
+        try:
+            with patch.object(app.history_view, "refresh") as mock_refresh:
+                self.assertIsNotNone(app.write_form.on_sent)
+                app.write_form.on_sent(42)  # type: ignore[misc]
+                mock_refresh.assert_called_once_with()
+        finally:
+            app.destroy()
 
 
 if __name__ == "__main__":
