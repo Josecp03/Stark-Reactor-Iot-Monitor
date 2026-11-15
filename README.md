@@ -2,7 +2,39 @@
 
 Aplicación de escritorio en Python y Tkinter para la **Actividad 2 grupal de Tecnologías Emergentes (UNIR)**. Permite enviar mediciones del reactor Arc a ThingSpeak y consultar los últimos registros del canal.
 
-## Instalación en Windows
+## Instalación y ejecución rápida mediante scripts
+
+El proyecto incluye scripts automáticos para instalar las dependencias, preparar `.env` a partir de `.env.example`, ejecutar los tests y abrir la aplicación tanto con **uv** (recomendado, descarga automáticamente Python 3.12 con Tkinter incluido) como con **pip**.
+
+### Opción A: Con `uv` (recomendado)
+
+- **Windows (PowerShell / CMD):**
+  ```powershell
+  .\install_with_uv.bat
+  .\run_with_uv.bat
+  ```
+- **Linux / macOS:**
+  ```bash
+  bash install_with_uv.sh
+  bash run_with_uv.sh
+  ```
+
+### Opción B: Con `pip`
+
+- **Windows (PowerShell / CMD):**
+  ```powershell
+  .\install_with_pip.bat
+  .\run_with_pip.bat
+  ```
+- **Linux / macOS:**
+  ```bash
+  bash install_with_pip.sh
+  bash run_with_pip.sh
+  ```
+
+---
+
+## Instalación manual en Windows
 
 Abre **PowerShell** en la carpeta que contiene `requirements.txt`. Necesitas Python 3.11 o superior con Tkinter y conexión a Internet. Ejecuta cada comando por separado.
 
@@ -60,9 +92,11 @@ En macOS o Linux usa `python3 -m venv .venv`, `cp .env.example .env` si todavía
 
 ## Uso
 
-1. En **Enviar muestra**, escribe los cinco valores. Se admite coma o punto decimal. **Rellenar** copia al formulario una muestra de prueba y **Limpiar** vacía los campos.
-2. Pulsa **Enviar**. Al guardar, aparece el número de registro y el botón muestra la espera hasta el siguiente envío.
-3. Abre **Histórico**, elige cuántos registros quieres ver y pulsa **Consultar / Actualizar**. Busca el mismo número de registro para comprobar los valores guardados.
+1. En la cabecera puedes pulsar sobre la URL del canal o el botón **Abrir canal en navegador** para ver el canal público en ThingSpeak.
+2. En **Enviar muestra**, escribe los cinco valores. Se admite coma o punto decimal. **Rellenar** copia al formulario una muestra de prueba y **Limpiar** vacía los campos.
+3. Pulsa **Enviar**. Al guardar, aparece el número de registro, el botón muestra la espera (15 s) hasta el siguiente envío y el histórico se actualiza automáticamente en segundo plano.
+4. Abre **Histórico**, elige cuántos registros quieres ver y pulsa **Consultar / Actualizar**. Además de la tabla ordenada del registro más reciente al más antiguo, verás el indicador de **Diagnóstico JARVIS** (Nominal, Precaución o Alerta Crítica de sobrecarga térmica).
+5. Abre **Gráficas** para visualizar la curva de evolución temporal de cualquiera de las cinco variables del reactor junto con sus métricas (último valor, mínimo, máximo y media).
 
 | Campo | Medición | Unidad o rango |
 | --- | --- | --- |

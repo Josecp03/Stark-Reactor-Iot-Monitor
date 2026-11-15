@@ -8,15 +8,13 @@ seguros para el canal público de ThingSpeak (3566091).
 from __future__ import annotations
 
 import os
-from math import isfinite
 from dataclasses import dataclass
+from math import isfinite
 from pathlib import Path
 
-# Directorio raíz del proyecto
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ENV_PATH = PROJECT_ROOT / ".env"
 
-# Valores por defecto del proyecto (canal público del equipo)
 DEFAULT_CHANNEL_ID = "3566091"
 DEFAULT_BASE_URL = "https://api.thingspeak.com"
 DEFAULT_HTTP_TIMEOUT = 10.0

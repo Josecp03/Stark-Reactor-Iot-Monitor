@@ -1,8 +1,4 @@
-"""Pruebas del formulario de entrada manual (P4-02, issue #15).
-
-Usan un servicio de escritura simulado: no se hacen peticiones a ThingSpeak.
-Compatible con `pytest` y con `python -m unittest`.
-"""
+"""Pruebas del formulario de entrada manual."""
 
 from __future__ import annotations
 
@@ -12,6 +8,10 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 
+from unittest.mock import patch
+
+from src.config import ThingSpeakConfig
+from src.ui.app import ReactorMonitorApp
 from src.ui.write_form import FORM_FIELDS, ManualEntryForm, load_test_samples, parse_field_value
 
 VALID_SAMPLE = {"field1": "52.4", "field2": "96.8", "field3": "35.2", "field4": "118.6", "field5": "42.3"}
@@ -165,6 +165,38 @@ class ManualEntryFormTests(unittest.TestCase):
         form.fill_sample(VALID_SAMPLE)
         self.assertEqual(form.vars["field4"].get(), "118.6")
         self.assertEqual(writer.calls, [])
+
+
+class ReactorMonitorAppTests(unittest.TestCase):
+    def test_app_wires_write_form_on_sent_to_history_refresh(self) -> None:
+        config = ThingSpeakConfig(channel_id="3566091", write_api_key="TESTKEY123")
+        try:
+            app = ReactorMonitorApp(config)
+        except tk.TclError as exc:
+            self.skipTest(f"Tkinter no disponible: {exc}")
+        app.withdraw()
+        try:
+            with patch.object(app.history_view, "refresh") as mock_refresh:
+                self.assertIsNotNone(app.write_form.on_sent)
+                app.write_form.on_sent(42)  # type: ignore[misc]
+                mock_refresh.assert_called_once_with()
+        finally:
+            app.destroy()
+
+    def test_app_header_opens_channel_in_browser(self) -> None:
+        config = ThingSpeakConfig(channel_id="3566091", write_api_key="TESTKEY123")
+        try:
+            app = ReactorMonitorApp(config)
+        except tk.TclError as exc:
+            self.skipTest(f"Tkinter no disponible: {exc}")
+        app.withdraw()
+        try:
+            with patch("src.ui.app.webbrowser.open", return_value=True) as mock_open:
+                app.open_channel_in_browser()
+                mock_open.assert_called_once_with("https://thingspeak.mathworks.com/channels/3566091")
+                self.assertIn("3566091", app.status_var.get())
+        finally:
+            app.destroy()
 
 
 if __name__ == "__main__":

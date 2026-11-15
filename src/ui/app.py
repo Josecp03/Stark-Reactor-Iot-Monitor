@@ -1,22 +1,16 @@
-"""Ventana principal de Stark Reactor IoT Monitor (P4-01, P4-02, P4-03).
-
-Estructura de la interfaz:
-- Cabecera con el canal configurado.
-- Aviso de configuración cuando faltan variables obligatorias.
-- Pestaña "Enviar muestra" (formulario manual, `src/ui/write_form.py`).
-- Pestaña "Histórico" (tabla de registros, `src/ui/history_view.py`).
-- Barra de estado.
-"""
+"""Ventana principal de Stark Reactor IoT Monitor."""
 
 from __future__ import annotations
 
 import sys
 import tkinter as tk
+import webbrowser
 from collections.abc import Sequence
 from tkinter import messagebox, ttk
 
 from src.config import ConfigProblem, ThingSpeakConfig
 from src.services.read_service import ReadResult, get_latest_readings
+from src.ui.charts_view import TelemetryChartsView
 from src.ui.history_view import HistoryView
 from src.ui.write_form import ManualEntryForm, SampleWriter
 
@@ -45,17 +39,41 @@ class ReactorMonitorApp(tk.Tk):
 
         self.set_status(self._initial_status())
 
-    # --- Construcción de la interfaz -------------------------------------------------
+    @property
+    def channel_url(self) -> str:
+        """URL pública del canal ThingSpeak configurado."""
+        return CHANNEL_URL_TEMPLATE.format(channel_id=self.config_data.channel_id)
 
     def _build_header(self) -> None:
         header = ttk.Frame(self, padding=(16, 12))
         header.pack(fill=tk.X)
         ttk.Label(header, text=APP_TITLE, font=("Segoe UI", 16, "bold")).pack(anchor=tk.W)
-        ttk.Label(
-            header,
-            text=f"Canal ThingSpeak {self.config_data.channel_id} · "
-            + CHANNEL_URL_TEMPLATE.format(channel_id=self.config_data.channel_id),
-        ).pack(anchor=tk.W)
+
+        sub = ttk.Frame(header)
+        sub.pack(fill=tk.X, pady=(2, 0))
+        ttk.Label(sub, text=f"Canal ThingSpeak {self.config_data.channel_id} · ").pack(side=tk.LEFT)
+        self.channel_link = tk.Label(
+            sub,
+            text=self.channel_url,
+            fg="#0969da",
+            cursor="hand2",
+            font=("Segoe UI", 9, "underline"),
+        )
+        self.channel_link.pack(side=tk.LEFT)
+        self.channel_link.bind("<Button-1>", self.open_channel_in_browser)
+
+        self.open_channel_button = ttk.Button(
+            sub,
+            text="Abrir canal en navegador",
+            command=self.open_channel_in_browser,
+        )
+        self.open_channel_button.pack(side=tk.RIGHT)
+
+    def open_channel_in_browser(self, _event: object = None) -> bool:
+        """Abre la vista pública del canal ThingSpeak en el navegador predeterminado."""
+        opened = webbrowser.open(self.channel_url)
+        self.set_status(f"Canal abierto en el navegador: {self.channel_url}")
+        return bool(opened)
 
     def _build_config_warning(self) -> None:
         box = tk.Frame(self, bg="#fff4ce", highlightbackground="#e0b800", highlightthickness=1)
@@ -85,17 +103,26 @@ class ReactorMonitorApp(tk.Tk):
 
         self.write_tab = ttk.Frame(notebook, padding=16)
         self.history_tab = ttk.Frame(notebook, padding=16)
+        self.charts_tab = ttk.Frame(notebook, padding=16)
         notebook.add(self.write_tab, text="Enviar muestra")
         notebook.add(self.history_tab, text="Histórico")
+        notebook.add(self.charts_tab, text="Gráficas")
 
         writer, disabled_reason = self._create_writer()
         self.write_form = ManualEntryForm(
             self.write_tab,
             writer=writer,
             disabled_reason=disabled_reason,
+            on_sent=self._on_sample_sent,
             on_status=self.set_status,
         )
         self.write_form.pack(fill=tk.BOTH, expand=True)
+
+        self.charts_view = TelemetryChartsView(
+            self.charts_tab,
+            on_refresh=self._on_sample_sent,
+        )
+        self.charts_view.pack(fill=tk.BOTH, expand=True)
 
         self.history_view = HistoryView(
             self.history_tab,
@@ -104,8 +131,13 @@ class ReactorMonitorApp(tk.Tk):
                 "Consulta desactivada: THINGSPEAK_CHANNEL_ID no es válido. Revise el archivo .env."
             ),
             on_status=self.set_status,
+            on_records=self.charts_view.set_records,
         )
         self.history_view.pack(fill=tk.BOTH, expand=True)
+
+    def _on_sample_sent(self, _entry_id: int | None = None) -> None:
+        """Actualiza automáticamente el histórico y las gráficas."""
+        self.history_view.refresh()
 
     def _fetch_readings(self, results: int) -> ReadResult:
         """Consulta los últimos registros con la configuración activa (se ejecuta en segundo plano)."""
@@ -133,8 +165,6 @@ class ReactorMonitorApp(tk.Tk):
         bar = ttk.Frame(self, padding=(16, 4))
         bar.pack(fill=tk.X, side=tk.BOTTOM)
         ttk.Label(bar, textvariable=self.status_var, anchor=tk.W).pack(fill=tk.X)
-
-    # --- Estado ----------------------------------------------------------------------
 
     def _initial_status(self) -> str:
         if not self.config_data.can_read:

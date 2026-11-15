@@ -1,15 +1,4 @@
-"""Vista de consulta e histórico del canal ThingSpeak (P4-03, issue #16).
-
-Muestra en una tabla los últimos registros del canal obtenidos con el servicio
-de lectura (`get_latest_readings`), con su número de registro, fecha y los
-cinco valores del reactor con sus unidades.
-
-- Botón «Consultar / Actualizar» y selector del número de registros.
-- Consulta en segundo plano para no bloquear la ventana.
-- Mensajes diferenciados para: consultando, canal sin registros y error de
-  comunicación.
-- Registros más recientes primero.
-"""
+"""Vista de consulta e histórico del canal ThingSpeak."""
 
 from __future__ import annotations
 
@@ -29,6 +18,7 @@ DEFAULT_RESULTS = 10
 EMPTY_VALUE = "—"
 
 COLOR_OK = "#1e7b34"
+COLOR_WARNING = "#8a5a00"
 COLOR_ERROR = "#b3261e"
 COLOR_INFO = "#3c3c3c"
 
@@ -62,6 +52,52 @@ def reading_to_row(reading: ReactorReading) -> tuple[str, ...]:
     )
 
 
+def evaluate_reactor_status(reading: ReactorReading | None) -> tuple[str, str, str]:
+    """Evalúa el estado térmico del reactor según la última lectura recibida.
+
+    Devuelve `(nivel, mensaje, color)` donde `nivel` es `SIN_DATOS`, `NOMINAL`,
+    `PRECAUCION` o `CRITICO`.
+    """
+    if reading is None:
+        return (
+            "SIN_DATOS",
+            "Diagnóstico JARVIS: en espera de telemetría del núcleo.",
+            COLOR_INFO,
+        )
+
+    load = reading.core_load
+    stability = reading.field_stability
+    latency = reading.jarvis_latency
+
+    if (
+        (load is not None and load >= 85.0)
+        or (stability is not None and stability < 75.0)
+        or (latency is not None and latency >= 200.0)
+    ):
+        return (
+            "CRITICO",
+            f"ALERTA CRÍTICA JARVIS (n.º {reading.entry_id}): Riesgo de sobrecarga térmica en el reactor.",
+            COLOR_ERROR,
+        )
+
+    if (
+        (load is not None and load >= 70.0)
+        or (stability is not None and stability < 85.0)
+        or (latency is not None and latency >= 150.0)
+    ):
+        return (
+            "PRECAUCION",
+            f"PRECAUCIÓN JARVIS (n.º {reading.entry_id}): Estrés térmico moderado detectado.",
+            COLOR_WARNING,
+        )
+
+    return (
+        "NOMINAL",
+        f"ESTADO NOMINAL JARVIS (n.º {reading.entry_id}): Parámetros del núcleo estables.",
+        COLOR_OK,
+    )
+
+
 class HistoryView(ttk.Frame):
     """Pestaña «Histórico»: consulta y tabla de los últimos registros del canal."""
 
@@ -71,6 +107,7 @@ class HistoryView(ttk.Frame):
         fetch: Fetcher | None,
         disabled_reason: str | None = None,
         on_status: Callable[[str], None] | None = None,
+        on_records: Callable[[list[ReactorReading]], None] | None = None,
     ) -> None:
         super().__init__(master)
         if fetch is None and not disabled_reason:
@@ -78,10 +115,13 @@ class HistoryView(ttk.Frame):
         self.fetch = fetch
         self.disabled_reason = disabled_reason
         self.on_status = on_status
+        self.on_records = on_records
 
         self.results_var = tk.StringVar(value=str(DEFAULT_RESULTS))
         self.message_var = tk.StringVar()
         self.updated_var = tk.StringVar()
+        self.diagnostic_var = tk.StringVar()
+        self.diagnostic_level = "SIN_DATOS"
 
         self._results: queue.Queue[Any] = queue.Queue()
         self._loading = False
@@ -93,8 +133,6 @@ class HistoryView(ttk.Frame):
             self.show_message(self.disabled_reason, COLOR_ERROR)
         else:
             self.show_message("Pulse «Consultar / Actualizar» para ver los últimos registros del canal.")
-
-    # --- Construcción ----------------------------------------------------------------
 
     def _build(self) -> None:
         toolbar = ttk.Frame(self)
@@ -120,7 +158,18 @@ class HistoryView(ttk.Frame):
         self.message_label = tk.Label(
             self, textvariable=self.message_var, anchor=tk.W, justify=tk.LEFT, wraplength=880
         )
-        self.message_label.pack(fill=tk.X, pady=(0, 8))
+        self.message_label.pack(fill=tk.X, pady=(0, 4))
+
+        self.diagnostic_label = tk.Label(
+            self,
+            textvariable=self.diagnostic_var,
+            anchor=tk.W,
+            justify=tk.LEFT,
+            font=("Segoe UI", 9, "bold"),
+            wraplength=880,
+        )
+        self.diagnostic_label.pack(fill=tk.X, pady=(0, 8))
+        self._update_diagnostic(None)
 
         table = ttk.Frame(self)
         table.pack(fill=tk.BOTH, expand=True)
@@ -143,8 +192,6 @@ class HistoryView(ttk.Frame):
         ttk.Label(self, text=legend, foreground="#6b6b6b", wraplength=880, justify=tk.LEFT).pack(
             fill=tk.X, pady=(8, 0)
         )
-
-    # --- Consulta --------------------------------------------------------------------
 
     @property
     def selected_results(self) -> int:
@@ -217,10 +264,18 @@ class HistoryView(ttk.Frame):
 
     def _fill_table(self, records: list[ReactorReading]) -> None:
         self.tree.delete(*self.tree.get_children())
-        for reading in sorted(records, key=lambda r: r.entry_id, reverse=True):
+        ordered = sorted(records, key=lambda r: r.entry_id, reverse=True)
+        for reading in ordered:
             self.tree.insert("", tk.END, iid=str(reading.entry_id), values=reading_to_row(reading))
+        self._update_diagnostic(ordered[0] if ordered else None)
+        if self.on_records is not None:
+            self.on_records(list(records))
 
-    # --- Mensajes --------------------------------------------------------------------
+    def _update_diagnostic(self, latest: ReactorReading | None) -> None:
+        level, text, color = evaluate_reactor_status(latest)
+        self.diagnostic_level = level
+        self.diagnostic_var.set(text)
+        self.diagnostic_label.configure(fg=color)
 
     def show_message(self, text: str, color: str = COLOR_INFO) -> None:
         self.message_var.set(text)

@@ -1,16 +1,4 @@
-"""Formulario de entrada manual de muestras del reactor (P4-02, issue #15).
-
-Permite escribir a mano los cinco valores del reactor y enviarlos a ThingSpeak
-mediante el servicio de escritura (`ThingSpeakWriter.send_sample`).
-
-- Cinco campos etiquetados con su unidad o rango.
-- Validación inmediata de cada campo antes de enviar (campo marcado en rojo).
-- Envío en segundo plano para no bloquear la ventana.
-- Botón `Enviar` desactivado mientras hay un envío en curso y durante el
-  intervalo mínimo entre escrituras, con cuenta atrás visible.
-- Opción de rellenar el formulario con una de las muestras de prueba del CSV;
-  el envío sigue siendo manual.
-"""
+"""Formulario de entrada manual de muestras del reactor."""
 
 from __future__ import annotations
 
@@ -138,8 +126,6 @@ class ManualEntryForm(ttk.Frame):
         self._build()
         self._refresh_send_button()
 
-    # --- Construcción ----------------------------------------------------------------
-
     def _configure_styles(self) -> None:
         style = ttk.Style(self)
         style.configure("Invalid.TEntry", fieldbackground="#fde7e6")
@@ -216,8 +202,6 @@ class ManualEntryForm(ttk.Frame):
         if self.disabled_reason:
             self.sample_combo.state(["disabled"])
             self.fill_button.state(["disabled"])
-
-    # --- Acciones --------------------------------------------------------------------
 
     def fill_selected_sample(self) -> None:
         index = self.sample_combo.current()
@@ -316,8 +300,6 @@ class ManualEntryForm(ttk.Frame):
         self.show_message(error, COLOR_ERROR)
         self._notify_status(f"Envío fallido: {error}")
 
-    # --- Estado del botón y cuenta atrás ---------------------------------------------
-
     def _refresh_send_button(self) -> None:
         if self._countdown_job is not None:
             self.after_cancel(self._countdown_job)
@@ -341,8 +323,6 @@ class ManualEntryForm(ttk.Frame):
 
         self.send_button.configure(text="Enviar")
         self.send_button.state(["!disabled"])
-
-    # --- Mensajes --------------------------------------------------------------------
 
     def show_message(self, text: str, color: str = COLOR_INFO) -> None:
         self.message_var.set(text)

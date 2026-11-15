@@ -1,12 +1,4 @@
-"""Servicio de lectura de telemetría desde ThingSpeak (Persona 2 — role:read).
-
-Implementa:
-- P2-01: Contrato de datos de lectura (`ReactorReading`, `ReadResult`, `FIELD_SPECS`).
-- P2-02: Peticiones HTTP GET al endpoint `feeds.json` de ThingSpeak con timeout,
-  límite configurable de últimos N registros (`results`) y manejo de errores HTTP/red.
-- P2-03: Normalización del JSON de `feeds` en estructuras tipadas y ordenadas,
-  convirtiendo cadenas numéricas a `float` y tratando nulos/vacíos de forma segura.
-"""
+"""Servicio de lectura de telemetría desde ThingSpeak."""
 
 from __future__ import annotations
 
@@ -56,12 +48,7 @@ FIELD_SPECS: tuple[FieldSpec, ...] = (
 
 @dataclass(frozen=True)
 class ReactorReading:
-    """Registro individual normalizado de telemetría del reactor Arc (P2-01).
-
-    Contiene `entry_id`, `created_at` y los cinco campos (`field1`..`field5`)
-    convertidos a `float` o `None` cuando el dato está ausente o no es numérico.
-    Expone además propiedades con nombres semánticos para uso directo en UI y gráficas.
-    """
+    """Registro individual normalizado de telemetría del reactor Arc."""
 
     entry_id: int
     created_at: str
@@ -122,7 +109,7 @@ class ReactorReading:
 
 @dataclass(frozen=True)
 class HttpFetchResult:
-    """Resultado de bajo nivel de la petición HTTP GET a ThingSpeak (P2-02)."""
+    """Resultado de la petición HTTP GET a ThingSpeak."""
 
     ok: bool
     status_code: int | None = None
@@ -133,7 +120,7 @@ class HttpFetchResult:
 
 @dataclass(frozen=True)
 class ReadResult:
-    """Contrato de respuesta del servicio de lectura para la interfaz (P2-01 / P2-03)."""
+    """Respuesta del servicio de lectura para la interfaz."""
 
     ok: bool
     channel_id: str
@@ -149,14 +136,7 @@ class ReadResult:
 
 
 def parse_numeric_field(value: Any) -> float | None:
-    """Convierte un valor de campo de ThingSpeak a `float` o `None` (P2-01 / P2-03).
-
-    Reglas:
-    - `None`, booleanos o cadenas vacías / espacios -> `None`
-    - Cadenas numéricas (`"52.4"`, `" 96.8 "`, `"-10"`) -> `float`
-    - Valores `NaN`, `inf` o `-inf` -> `None`
-    - Cualquier otro texto o tipo no convertible -> `None`
-    """
+    """Convierte un valor de campo de ThingSpeak a `float` o `None`."""
     if value is None or isinstance(value, bool):
         return None
 
@@ -213,10 +193,7 @@ def format_timestamp(raw_timestamp: str | None) -> str:
 
 
 def normalize_feed_entry(raw_entry: Mapping[str, Any]) -> ReactorReading | None:
-    """Transforma un objeto `feed` de ThingSpeak en un `ReactorReading` (P2-03).
-
-    Si `raw_entry` no es un mapeo o carece de un `entry_id` válido, devuelve `None`.
-    """
+    """Transforma un objeto `feed` de ThingSpeak en un `ReactorReading`."""
     if not isinstance(raw_entry, Mapping):
         return None
 
@@ -241,12 +218,7 @@ def normalize_feed_entry(raw_entry: Mapping[str, Any]) -> ReactorReading | None:
 def normalize_feeds(
     payload_or_feeds: Mapping[str, Any] | Sequence[Mapping[str, Any]] | None,
 ) -> list[ReactorReading]:
-    """Normaliza la colección `feeds` en una lista ordenada de `ReactorReading` (P2-03).
-
-    Acepta tanto el JSON completo devuelto por ThingSpeak (`{"channel": ..., "feeds": [...]}`)
-    como directamente una secuencia de diccionarios `feeds`.
-    Los registros se devuelven ordenados ascendentemente por `(entry_id, created_at)`.
-    """
+    """Normaliza la colección `feeds` en una lista ordenada de `ReactorReading`."""
     if payload_or_feeds is None:
         return []
 
@@ -329,15 +301,7 @@ def fetch_channel_feeds(
     timeout: float = DEFAULT_HTTP_TIMEOUT,
     http_get: Callable[[str, float], tuple[int, str]] | None = None,
 ) -> HttpFetchResult:
-    """Consulta el endpoint `feeds.json` de ThingSpeak mediante HTTP GET (P2-02).
-
-    Gestiona de forma controlada:
-    - Argumentos inválidos (`channel_id` vacío, `results <= 0`, `timeout <= 0`).
-    - Timeouts (`TimeoutError`, `socket.timeout`, `requests.Timeout`).
-    - Errores de red/conexión (`ConnectionError`, `urllib.error.URLError`, `requests.RequestException`).
-    - Códigos de estado HTTP distintos de 200 (`400`, `401`, `404`, `500`, etc.).
-    - Respuestas con JSON malformado o estructura inesperada.
-    """
+    """Consulta el endpoint `feeds.json` de ThingSpeak mediante HTTP GET."""
     try:
         url = build_feeds_url(
             channel_id=channel_id,
@@ -433,10 +397,7 @@ def get_latest_readings(
     config: ThingSpeakConfig | None = None,
     http_get: Callable[[str, float], tuple[int, str]] | None = None,
 ) -> ReadResult:
-    """Obtiene y normaliza los últimos `results` registros del canal ThingSpeak (P2-01/02/03).
-
-    Esta es la función principal que debe invocar la interfaz gráfica (Persona 4).
-    """
+    """Obtiene y normaliza los últimos `results` registros del canal ThingSpeak."""
     cfg = config or ThingSpeakConfig.from_env()
     resolved_channel_id = channel_id if channel_id is not None else cfg.channel_id
     resolved_api_key = api_key if api_key is not None else cfg.read_api_key
@@ -510,7 +471,7 @@ def _format_http_status_error(status_code: int, channel_id: str) -> str:
 
 
 def _main() -> int:
-    """Permite probar la lectura del canal desde la línea de comandos (P2-02 / P2-04)."""
+    """Permite probar la lectura del canal desde la línea de comandos."""
     parser = argparse.ArgumentParser(
         description="Consulta registros del canal ThingSpeak del reactor Arc."
     )

@@ -12,6 +12,12 @@ if not exist ".env" (
     )
 )
 
+REM Si .venv pertenece a Linux/WSL, limpiarlo antes de sincronizar en Windows
+if exist ".venv\lib64" (
+    rmdir ".venv\lib64" >nul 2>nul
+    rmdir /s /q ".venv" >nul 2>nul
+)
+
 REM Comprobar configuracion
 uv run --managed-python python -m src.main --check-config
 
