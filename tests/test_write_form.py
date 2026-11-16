@@ -198,6 +198,19 @@ class ReactorMonitorAppTests(unittest.TestCase):
         finally:
             app.destroy()
 
+    def test_wsl_browser_opens_via_host_command(self) -> None:
+        from src.ui.app import _WSLBrowser
+
+        browser = _WSLBrowser()
+        with (
+            patch("src.ui.app.shutil.which", side_effect=lambda exe: "/usr/bin/cmd.exe" if exe == "cmd.exe" else None),
+            patch("src.ui.app.subprocess.run") as mock_run,
+        ):
+            mock_run.return_value.returncode = 0
+            self.assertTrue(browser.open("https://thingspeak.mathworks.com/channels/3566091"))
+            mock_run.assert_called_once()
+
+
 
 if __name__ == "__main__":
     unittest.main()

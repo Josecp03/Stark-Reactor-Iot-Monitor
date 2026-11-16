@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 import sys
 import tkinter as tk
 import webbrowser
 from collections.abc import Sequence
+from pathlib import Path
 from tkinter import messagebox, ttk
 
 from src.config import ConfigProblem, ThingSpeakConfig
@@ -16,6 +20,51 @@ from src.ui.write_form import ManualEntryForm, SampleWriter
 
 APP_TITLE = "Stark Reactor IoT Monitor"
 CHANNEL_URL_TEMPLATE = "https://thingspeak.mathworks.com/channels/{channel_id}"
+
+
+class _WSLBrowser(webbrowser.BaseBrowser):
+    """Abre URLs en el navegador predeterminado de Windows cuando se ejecuta desde WSL."""
+
+    def open(self, url: str, new: int = 0, autoraise: bool = True) -> bool:
+        win_cwd = "/mnt/c" if Path("/mnt/c").is_dir() else None
+        for cmd in (
+            ["wslview", url],
+            ["cmd.exe", "/c", "start", "", url],
+            ["/mnt/c/Windows/System32/cmd.exe", "/c", "start", "", url],
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", "Start-Process", url],
+        ):
+            executable = cmd[0]
+            if not (shutil.which(executable) or Path(executable).is_file()):
+                continue
+            try:
+                proc = subprocess.run(
+                    cmd,
+                    cwd=win_cwd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    timeout=5,
+                )
+                if proc.returncode == 0:
+                    return True
+            except (OSError, subprocess.SubprocessError):
+                continue
+        return False
+
+
+def _is_wsl() -> bool:
+    if not sys.platform.startswith("linux"):
+        return False
+    if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
+        return True
+    try:
+        return "microsoft" in os.uname().release.lower()
+    except AttributeError:
+        return False
+
+
+if _is_wsl():
+    webbrowser.register("wsl-host-browser", None, _WSLBrowser(), preferred=True)
 
 
 class ReactorMonitorApp(tk.Tk):
@@ -72,7 +121,10 @@ class ReactorMonitorApp(tk.Tk):
     def open_channel_in_browser(self, _event: object = None) -> bool:
         """Abre la vista pública del canal ThingSpeak en el navegador predeterminado."""
         opened = webbrowser.open(self.channel_url)
-        self.set_status(f"Canal abierto en el navegador: {self.channel_url}")
+        if opened:
+            self.set_status(f"Canal abierto en el navegador: {self.channel_url}")
+        else:
+            self.set_status(f"URL del canal: {self.channel_url}")
         return bool(opened)
 
     def _build_config_warning(self) -> None:
